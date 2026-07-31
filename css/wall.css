@@ -14,7 +14,7 @@ h1, h2, .stat-num, .clock-time, .rank, .lb-count, .goal-num, .avatar, .card-head
   font-weight: 900;
 }
 
-.eyebrow, .stat-label, .mini-label, .badge, .hero-sub, .clock-date, .ticker {
+.eyebrow, .stat-label, .mini-label, .badge, .hero-sub, .clock-date, .qr-url, .ticker {
   font-family: "IBM Plex Mono", monospace;
   text-transform: uppercase;
   letter-spacing: 0.15em;
@@ -174,21 +174,25 @@ body {
   left: auto;
   width: auto;
   display: flex;
-  gap: 0.4vw;
+  align-items: center;
+  gap: 0;
   z-index: 3;
 }
 .hero-slider .swiper-pagination-bullet {
-  width: 1vw;
-  height: 0.35vw;
+  width: 0.5vw;
+  height: 0.5vw;
   margin: 0;
-  border-radius: 2px;
+  border-radius: 50%;
   background: rgba(255, 255, 255, 0.3);
   opacity: 1;
   transition: width 0.2s, background 0.2s;
 }
 .hero-slider .swiper-pagination-bullet-active {
   width: 2vw;
+  height: 0.5vw;
+  border-radius: 999px;
   background: var(--orange);
+  margin: 0 0.3vw;
 }
 
 .story {
@@ -344,6 +348,33 @@ body {
   margin: 0 0 0.6vh;
 }
 
+.qr {
+  display: flex;
+  align-items: center;
+  gap: 1vw;
+}
+.qr img {
+  width: 7vw;
+  height: 7vw;
+  border-radius: 10px;
+  flex: 0 0 auto;
+}
+.qr .qr-title {
+  font-size: 1.2vw;
+  font-weight: 600;
+  margin: 0.4vh 0;
+}
+.qr .qr-url {
+  font-size: 0.75vw;
+  color: var(--muted);
+  margin: 0;
+  letter-spacing: 0.05em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 13vw;
+}
+
 /* Dynamic 6th row: the user on the active swiper slide, shown only when they're outside the top 5. */
 .lb-active {
   border: 1px dashed rgba(255, 106, 0, 0.5);
@@ -495,10 +526,14 @@ body {
   .rank, .lb-count, .goal-num {
     font-size: 24px;
   }
-  .lb-name, .streak-name {
+  .lb-name, .streak-name, .qr-title {
     font-size: 18px;
   }
   .goal {
     flex-wrap: wrap;
+  }
+  .qr img {
+    width: 96px;
+    height: 96px;
   }
 }

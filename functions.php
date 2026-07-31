@@ -8,6 +8,10 @@ if (!is_file($configFile)) {
 }
 $config = require $configFile;
 
+// Evaluate all dates in the business timezone. Meetings arrive as UTC; without this the 9AM–9PM
+// window and "today" are judged in the server's UTC, dropping meetings that are daytime in Dubai.
+date_default_timezone_set($config['timezone'] ?? 'Asia/Dubai');
+
 session_name('darstories_session');
 session_set_cookie_params(['httponly' => true, 'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off', 'samesite' => 'Lax']);
 session_start();

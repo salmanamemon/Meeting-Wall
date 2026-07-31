@@ -8,6 +8,9 @@ $done = min($wall['today'], $goal); // bar caps at the goal: 1/2 or 2/2
 $pct = (int) round($done / $goal * 100);
 $leaders = array_slice($wall['leaders'], 0, 5);
 $streak = $leaders[0] ?? null;
+$uploadUrl = ($config['upload_url'] ?? '') ?: appUrl('index.php');
+// ponytail: external QR service; swap for a local generator when the upload flow lands.
+$qr = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&color=1a1208&bgcolor=fff7ed&data=' . urlencode($uploadUrl);
 $phrases = $config['ticker'] ?? ['BOOKED BEATS PERFECT.', 'MOMENTUM IS A TEAM SPORT.'];
 $P = __DIR__ . '/partials';
 ?>
@@ -22,6 +25,7 @@ $P = __DIR__ . '/partials';
   <aside class="rail">
     <?php include "$P/leaderboard.php"; ?>
     <?php if ($streak) include "$P/streak.php"; ?>
+    <?php include "$P/qr.php"; ?>
   </aside>
 </div>
 <?php include "$P/goal.php"; ?>
