@@ -1,59 +1,134 @@
 function initClock() {
-  clearInterval(window._clock);
-  const t = document.getElementById('clock'), d = document.getElementById('clock-date');
-  if (!t) return;
-  const upd = () => {
-    const n = new Date();
-    t.textContent = n.toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'});
-    if (d) d.textContent = n.toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'}).toUpperCase();
+  clearInterval(window.meetingWallClockTimer);
+  const timeElement = document.getElementById('clock');
+  const dateElement = document.getElementById('clock-date');
+  if (!timeElement) return;
+  const updateClock = () => {
+    const now = new Date();
+    timeElement.textContent = now.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', hour12: true});
+    if (dateElement) dateElement.textContent = now.toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'}).toUpperCase();
   };
-  upd();
-  window._clock = setInterval(upd, 1000);
+  updateClock();
+  window.meetingWallClockTimer = setInterval(updateClock, 1000);
 }
 
 function bindFullscreen() {
-  const b = document.getElementById('fs');
-  if (b) b.onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+  const fullscreenButton = document.getElementById('fs');
+  if (fullscreenButton) fullscreenButton.onclick = () =>
+    document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
 }
 
-// Reflect the active slide's user as a 6th leaderboard row — only when they're outside the weekly top 5.
+// Pinned 6th leaderboard row: always mirrors the user on the active swiper slide (with their weekly rank + count).
 function updateActiveLeaderRow() {
-  const sw = window._swiper, row = document.getElementById('lb-active');
-  if (!sw || !row) return;
-  const slide = sw.slides[sw.activeIndex]; // duplicates carry the same data, so this is fine in loop mode
-  const owner = slide && slide.dataset.owner;
-  if (!owner) { row.hidden = true; return; }
-  let data = {};
-  try { data = JSON.parse(document.getElementById('lb-data').textContent); } catch {}
-  const info = data[owner];
-  if (info && info.rank <= 5) { row.hidden = true; return; } // already in the top 5
-  row.querySelector('.rank').textContent = info ? info.rank : '–';
-  row.querySelector('.avatar').textContent = slide.dataset.initials || '';
-  row.querySelector('.lb-name').textContent = owner;
-  row.querySelector('.lb-count').textContent = info ? info.count : 0;
-  row.hidden = false;
+  const swiper = window.meetingWallSwiper;
+  const activeRow = document.getElementById('lb-active');
+  if (!swiper || !activeRow) return;
+  const activeSlide = swiper.slides[swiper.activeIndex]; // loop duplicates carry the same data
+  const ownerName = activeSlide && activeSlide.dataset.owner;
+  if (!ownerName) { activeRow.hidden = true; return; }
+  let rankByOwner = {};
+  try { rankByOwner = JSON.parse(document.getElementById('lb-data').textContent); } catch (error) {}
+  const ownerRank = rankByOwner[ownerName];
+  activeRow.querySelector('.rank').textContent = ownerRank ? ownerRank.rank : '–';
+  const avatarCell = activeRow.querySelector('.avatar');
+  avatarCell.textContent = activeSlide.dataset.initials || '';
+  const photoUrl = activeSlide.dataset.photo;
+  if (photoUrl) {
+    const photoImage = document.createElement('img');
+    photoImage.src = photoUrl;
+    photoImage.alt = '';
+    photoImage.onerror = () => photoImage.remove();
+    avatarCell.appendChild(photoImage);
+  }
+  activeRow.querySelector('.lb-name').textContent = ownerName;
+  activeRow.querySelector('.lb-count').textContent = ownerRank ? ownerRank.count : 0;
+  activeRow.hidden = false;
+}
+
+// Per-user daily goal: the bar follows the active slide, showing that user's meetings today (capped at the goal).
+function updateGoalForSlide() {
+  const swiper = window.meetingWallSwiper;
+  const goalElement = document.querySelector('.goal');
+  if (!swiper || !goalElement) return;
+  const activeSlide = swiper.slides[swiper.activeIndex];
+  const ownerName = activeSlide && activeSlide.dataset.owner;
+  if (!ownerName) return;
+  const goal = parseInt(goalElement.dataset.goal, 10) || 2;
+  let countByOwner = {};
+  try { countByOwner = JSON.parse(document.getElementById('goal-data').textContent); } catch (error) {}
+  const done = Math.min(countByOwner[ownerName] || 0, goal);
+  const percent = Math.round(done / goal * 100);
+  document.getElementById('goal-fill').style.width = percent + '%';
+  document.getElementById('goal-done').textContent = done;
+  document.getElementById('goal-percent').textContent = percent + '%';
+  maybeCelebrate(ownerName, done, goal);
+}
+
+// When the active slide's user has hit their goal (2/2), play the celebration once per user per day.
+function maybeCelebrate(ownerName, done, goal) {
+  if (!ownerName || done < goal) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const celebratedKey = 'mw-celebrated-' + today + '-' + ownerName;
+  if (localStorage.getItem(celebratedKey)) return; // already celebrated this user today
+  localStorage.setItem(celebratedKey, '1');
+  playCelebration();
+}
+
+// Show the "JUST NOW" badge and rain themed confetti for ~4s, then hide the badge.
+function playCelebration() {
+  const justNowBadge = document.getElementById('just-now');
+  if (justNowBadge) justNowBadge.hidden = false;
+  if (window.confetti) {
+    const colors = ['#ff6a00', '#ff2e9a', '#f5b544', '#fff7ed'];
+    const endTime = Date.now() + 4000;
+    // Light bursts every 300ms (not every frame) so the confetti stays sparse.
+    const confettiTimer = setInterval(() => {
+      if (Date.now() > endTime) { clearInterval(confettiTimer); return; }
+      window.confetti({particleCount: 3, angle: 60, spread: 55, startVelocity: 50, origin: {x: 0, y: 0.9}, colors});
+      window.confetti({particleCount: 3, angle: 120, spread: 55, startVelocity: 50, origin: {x: 1, y: 0.9}, colors});
+    }, 300);
+  }
+  clearTimeout(window.meetingWallCelebrationTimer);
+  window.meetingWallCelebrationTimer = setTimeout(() => { if (justNowBadge) justNowBadge.hidden = true; }, 4500);
+}
+
+// Cross-fade the leaderboard through its pages of 3 (present only when there are more than 3 users).
+function rotateLeaderboard() {
+  clearInterval(window.meetingWallLeaderboardTimer);
+  const leaderboardList = document.querySelector('.lb-list[data-rotate]');
+  if (!leaderboardList) return;
+  const pages = [...leaderboardList.querySelectorAll('.lb-page')];
+  if (pages.length < 2) return;
+  let currentPage = 0;
+  window.meetingWallLeaderboardTimer = setInterval(() => {
+    pages[currentPage].classList.remove('active');
+    currentPage = (currentPage + 1) % pages.length;
+    pages[currentPage].classList.add('active');
+  }, 6000);
 }
 
 // One meeting card per view; touch-swipeable, auto-advances. Destroys the prior instance so poll swaps don't leak.
 function initSwiper() {
-  if (window._swiper) { window._swiper.destroy(true, true); window._swiper = null; }
-  const el = document.querySelector('.hero-slider');
-  if (!el || !window.Swiper) return;
-  const count = el.querySelectorAll('.swiper-slide').length;
-  window._swiper = new Swiper(el, {
-    loop: count > 1,
+  if (window.meetingWallSwiper) { window.meetingWallSwiper.destroy(true, true); window.meetingWallSwiper = null; }
+  const heroElement = document.querySelector('.hero-slider');
+  if (!heroElement || !window.Swiper) return;
+  const slideCount = heroElement.querySelectorAll('.swiper-slide').length;
+  window.meetingWallSwiper = new Swiper(heroElement, {
+    loop: slideCount > 1,
     grabCursor: true,
-    autoplay: count > 1 ? {delay: 6000, disableOnInteraction: false, pauseOnMouseEnter: true} : false,
-    pagination: {el: el.querySelector('.swiper-pagination'), clickable: true},
+    autoplay: slideCount > 1 ? {delay: 6000, disableOnInteraction: false, pauseOnMouseEnter: true} : false,
+    pagination: {el: heroElement.querySelector('.swiper-pagination'), clickable: true, dynamicBullets: true, dynamicMainBullets: 1},
   });
-  window._swiper.on('slideChange', updateActiveLeaderRow);
+  window.meetingWallSwiper.on('slideChange', () => { updateActiveLeaderRow(); updateGoalForSlide(); });
   updateActiveLeaderRow();
+  updateGoalForSlide();
 }
 
 function initWall() {
   initClock();
   bindFullscreen();
   initSwiper();
+  rotateLeaderboard();
 }
 
 initWall();
@@ -67,5 +142,5 @@ if (document.body.dataset.signature) setInterval(async () => {
     document.body.dataset.signature = signature;
     document.getElementById('wall').innerHTML = html;
     initWall();
-  } catch {} // network blip: ignore, retry next tick
+  } catch (error) {} // network blip: ignore, retry next tick
 }, 30000);

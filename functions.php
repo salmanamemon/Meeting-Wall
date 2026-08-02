@@ -149,6 +149,46 @@ function stories(): array
     return $items;
 }
 
+// Weekly leaderboard from the middleware (aggregated per user). Returns [['name' => ..., 'count' => int], ...]
+// sorted by count desc. Returns [] on any failure so the caller can fall back. Cached 60s.
+function leaderboard(): array
+{
+    global $config;
+    $cacheFile = sys_get_temp_dir() . '/darstories_leaderboard.json';
+    if (is_file($cacheFile) && time() - filemtime($cacheFile) < 60) {
+        $cached = json_decode((string) file_get_contents($cacheFile), true);
+        if (is_array($cached)) return $cached;
+    }
+    $url = $config['leaderboard']['url'] ?? '';
+    if (!$url) return [];
+    $curl = curl_init($url);
+    curl_setopt_array($curl, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 12,
+        CURLOPT_HTTPHEADER => array_merge(['Accept: application/json'], $config['leaderboard']['headers'] ?? []),
+    ]);
+    $body = curl_exec($curl);
+    $status = (int) curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+    curl_close($curl);
+    if ($body === false || $status < 200 || $status >= 300) return [];
+    $rows = json_decode($body, true)['data'] ?? [];
+    if (!is_array($rows)) return [];
+    $leaders = [];
+    foreach ($rows as $row) {
+        if (!is_array($row)) continue;
+        $hasPhoto = !empty($row['IsProfilePhotoActive']) && !empty($row['FullPhotoUrl']);
+        $leaders[] = [
+            'name' => $row['Name'] ?? 'Unassigned',
+            'count' => (int) ($row['cnt'] ?? 0),
+            'ownerId' => $row['OwnerId'] ?? '',
+            'photo' => $hasPhoto ? $row['FullPhotoUrl'] : null,
+        ];
+    }
+    usort($leaders, fn(array $first, array $second) => $second['count'] <=> $first['count']);
+    file_put_contents($cacheFile, json_encode($leaders), LOCK_EX);
+    return $leaders;
+}
+
 // Renders the story cards to an HTML string, reusing the same partial the hero uses.
 function renderSlides(array $items): string { ob_start(); include __DIR__ . '/partials/slides.php'; return ob_get_clean(); }
 
@@ -159,8 +199,8 @@ function renderWall(array $items, string $error = ''): string { ob_start(); incl
 function meetingTs(array $item): ?int
 {
     $raw = $item['Check_Out_Date_Time__c'] ?? $item['Meeting_Date__c'] ?? $item['createdOn'] ?? '';
-    $t = $raw ? strtotime((string) $raw) : false;
-    return $t !== false ? $t : null;
+    $timestamp = $raw ? strtotime((string) $raw) : false;
+    return $timestamp !== false ? $timestamp : null;
 }
 
 // Initials for the generated avatar, e.g. "Maya Ortiz" -> "MO".
@@ -172,23 +212,32 @@ function initials(string $name): string
     return strtoupper($first . $last);
 }
 
-// "57 MIN AGO" style relative label.
-function agoText(int $ts): string
+// Avatar markup: profile photo when available, initials underneath as the fallback (the image removes
+// itself on error, revealing the initials). $extraClass e.g. 'big' for the hero avatar.
+function avatarHtml(string $name, ?string $photo = null, string $extraClass = ''): string
 {
-    $s = max(0, time() - $ts);
-    if ($s < 60) return 'JUST NOW';
-    if ($s < 3600) return intdiv($s, 60) . ' MIN AGO';
-    if ($s < 86400) return intdiv($s, 3600) . ' HR AGO';
-    return intdiv($s, 86400) . ' DAY AGO';
+    $classAttribute = 'avatar' . ($extraClass ? ' ' . $extraClass : '');
+    $imageTag = $photo ? '<img src="' . escapeHtml($photo) . '" alt="" loading="lazy" onerror="this.remove()">' : '';
+    return '<span class="' . $classAttribute . '">' . escapeHtml(initials($name)) . $imageTag . '</span>';
+}
+
+// "57 MIN AGO" style relative label.
+function agoText(int $timestamp): string
+{
+    $seconds = max(0, time() - $timestamp);
+    if ($seconds < 60) return 'JUST NOW';
+    if ($seconds < 3600) return intdiv($seconds, 60) . ' MIN AGO';
+    if ($seconds < 86400) return intdiv($seconds, 3600) . ' HR AGO';
+    return intdiv($seconds, 86400) . ' DAY AGO';
 }
 
 // A meeting "counts" only if it happened today between 9AM and 9PM. Previous days never carry into today.
 function inTodayWindow(array $item): bool
 {
-    $ts = meetingTs($item);
-    if ($ts === null || date('Y-m-d', $ts) !== date('Y-m-d')) return false;
-    $h = (int) date('G', $ts);
-    return $h >= 9 && $h < 21; // 9AM–9PM
+    $timestamp = meetingTs($item);
+    if ($timestamp === null || date('Y-m-d', $timestamp) !== date('Y-m-d')) return false;
+    $hour = (int) date('G', $timestamp);
+    return $hour >= 9 && $hour < 21; // 9AM–9PM
 }
 
 // Today's meetings (9AM–9PM only) — what the wall actually displays and scores.
@@ -201,32 +250,32 @@ function todayMeetings(array $items): array
 // leaders = this-week ranking (from the API's weekly data), full list — the wall slices the top 5.
 function wallData(array $items): array
 {
-    $week = date('oW');
-    $todayN = $weekN = 0;
-    $byOwnerWeek = [];
-    foreach ($items as $it) {
-        $ts = meetingTs($it);
-        if ($ts === null) continue;
-        if (inTodayWindow($it)) $todayN++;
-        if (date('oW', $ts) === $week) {
-            $weekN++;
-            $name = $it['OwnerName'] ?? 'Unassigned';
-            $byOwnerWeek[$name] = ($byOwnerWeek[$name] ?? 0) + 1;
+    $currentWeek = date('oW');
+    $todayCount = $weekCount = 0;
+    $countByOwner = [];
+    foreach ($items as $meeting) {
+        $timestamp = meetingTs($meeting);
+        if ($timestamp === null) continue;
+        if (inTodayWindow($meeting)) $todayCount++;
+        if (date('oW', $timestamp) === $currentWeek) {
+            $weekCount++;
+            $ownerName = $meeting['OwnerName'] ?? 'Unassigned';
+            $countByOwner[$ownerName] = ($countByOwner[$ownerName] ?? 0) + 1;
         }
     }
-    arsort($byOwnerWeek);
+    arsort($countByOwner);
     $leaders = [];
-    foreach ($byOwnerWeek as $name => $c) $leaders[] = ['name' => $name, 'count' => $c];
-    return ['today' => $todayN, 'week' => $weekN, 'leaders' => $leaders];
+    foreach ($countByOwner as $ownerName => $count) $leaders[] = ['name' => $ownerName, 'count' => $count];
+    return ['today' => $todayCount, 'week' => $weekCount, 'leaders' => $leaders];
 }
 
 // Fingerprint of the current story set, so the client can detect changes and reload.
 function storiesSignature(array $items): string { return md5(json_encode($items)); }
 
-function h(mixed $value): string { return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8'); }
+function escapeHtml(mixed $value): string { return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8'); }
 
 // Local asset URL with a mtime cache-buster so edits are never served stale.
-function asset(string $path): string { $f = __DIR__ . '/' . $path; return h($path . (is_file($f) ? '?v=' . filemtime($f) : '')); }
+function asset(string $path): string { $fullPath = __DIR__ . '/' . $path; return escapeHtml($path . (is_file($fullPath) ? '?v=' . filemtime($fullPath) : '')); }
 
 function appUrl(string $path = ''): string
 {

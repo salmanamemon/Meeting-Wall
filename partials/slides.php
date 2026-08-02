@@ -2,7 +2,8 @@
 <?php foreach ($items as $item):
   $owner = $item['OwnerName'] ?? 'Unassigned';
   $document = $item['checkOutDocumentLink'] ?? '';
-  $ts = meetingTs($item);
-  $time = $ts ? date('g:i A', $ts) : '';
-  $ago = $ts ? agoText($ts) : '';
-?><article class="story swiper-slide" data-owner="<?= h($owner) ?>" data-initials="<?= h(initials($owner)) ?>"><?php if ($document): ?><img class="hero-bg" src="<?= h($document) ?>" alt="Meeting photo for <?= h($owner) ?>" loading="lazy" onerror="this.style.display='none'"><?php endif; ?><div class="hero-grad"></div><div class="hero-meta"><span class="avatar big"><?= h(initials($owner)) ?></span><div><h2><?= h($owner) ?></h2><p class="hero-sub"><?php if ($time): ?><span class="hero-time"><?= h($time) ?></span><?php endif; ?><?php if ($time && $ago): ?> · <?php endif; ?><?php if ($ago): ?><span class="hero-ago"><?= h($ago) ?></span><?php endif; ?></p></div></div></article><?php endforeach; ?>
+  $photo = ($photoByOwnerId ?? [])[$item['OwnerId'] ?? ''] ?? null;
+  $timestamp = meetingTs($item);
+  $time = $timestamp ? date('g:i A', $timestamp) : '';
+  $ago = $timestamp ? agoText($timestamp) : '';
+?><article class="story swiper-slide" data-owner="<?= escapeHtml($owner) ?>" data-initials="<?= escapeHtml(initials($owner)) ?>" data-photo="<?= escapeHtml($photo ?? '') ?>"><?php if ($document): ?><img class="hero-bg" src="<?= escapeHtml($document) ?>" alt="Meeting photo for <?= escapeHtml($owner) ?>" loading="lazy" onerror="this.style.display='none'"><?php endif; ?><div class="hero-grad"></div><div class="hero-meta"><?= avatarHtml($owner, $photo, 'big') ?><div><h2><?= escapeHtml($owner) ?></h2><p class="hero-sub"><?php /* hero-time hidden per request: if ($time): ?><span class="hero-time"><?= escapeHtml($time) ?></span><?php endif; if ($time && $ago): ?> · <?php endif; */ ?><?php if ($ago): ?><span class="hero-ago"><?= escapeHtml($ago) ?></span><?php endif; ?></p></div></div></article><?php endforeach; ?>

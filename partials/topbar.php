@@ -7,7 +7,7 @@
     <div class="clock"><p id="clock" class="clock-time">--:--</p><p id="clock-date" class="clock-date"></p></div>
     <div class="icons">
       <button id="fs" class="icon" aria-label="Fullscreen">&#9974;</button>
-      <form method="post" action="logout.php" class="icon-form"><input type="hidden" name="csrf" value="<?= h(csrf()) ?>"><button class="icon" aria-label="Sign out">&#9211;</button></form>
+      <form method="post" action="logout.php" class="icon-form"><input type="hidden" name="csrf" value="<?= escapeHtml(csrf()) ?>"><button class="icon" aria-label="Sign out">&#9211;</button></form>
     </div>
   </div>
 </header>

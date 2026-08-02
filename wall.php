@@ -4,30 +4,43 @@ global $config;
 $wall = wallData($items);
 $items = todayMeetings($items); // only today's cards (9AM–9PM) — previous days don't show
 $goal = max(1, (int) ($config['daily_goal'] ?? 2));
-$done = min($wall['today'], $goal); // bar caps at the goal: 1/2 or 2/2
-$pct = (int) round($done / $goal * 100);
-$leaders = array_slice($wall['leaders'], 0, 5);
+// The goal is per user: each owner's own meetings today, capped at the goal. The bar follows the active slide.
+$todayCountByOwner = [];
+foreach ($items as $meeting) {
+    $ownerName = $meeting['OwnerName'] ?? 'Unassigned';
+    $todayCountByOwner[$ownerName] = ($todayCountByOwner[$ownerName] ?? 0) + 1;
+}
+$firstOwner = $items[0]['OwnerName'] ?? '';
+$done = min($todayCountByOwner[$firstOwner] ?? 0, $goal); // initial value for the first slide's user
+$percent = (int) round($done / $goal * 100);
+// Weekly leaderboard comes from the dedicated API; fall back to the stories-derived ranking if it's down.
+$rankedLeaders = leaderboard() ?: $wall['leaders'];
+$wall['leaders'] = $rankedLeaders; // full ranking used for the pinned 6th-row rank lookup
+$wall['week'] = array_sum(array_column($rankedLeaders, 'count')); // whole-week total from the leaderboard API
+$leaders = $rankedLeaders;
+// Match hero cards to leaderboard profile photos by OwnerId (activity_list carries OwnerId too).
+$photoByOwnerId = [];
+foreach ($rankedLeaders as $leader) {
+    if (!empty($leader['ownerId']) && !empty($leader['photo'])) $photoByOwnerId[$leader['ownerId']] = $leader['photo'];
+}
 $streak = $leaders[0] ?? null;
-$uploadUrl = ($config['upload_url'] ?? '') ?: appUrl('index.php');
-// ponytail: external QR service; swap for a local generator when the upload flow lands.
-$qr = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&color=1a1208&bgcolor=fff7ed&data=' . urlencode($uploadUrl);
 $phrases = $config['ticker'] ?? ['BOOKED BEATS PERFECT.', 'MOMENTUM IS A TEAM SPORT.'];
-$P = __DIR__ . '/partials';
+$partialsDir = __DIR__ . '/partials';
 ?>
-<?php include "$P/topbar.php"; ?>
+<?php include "$partialsDir/topbar.php"; ?>
 <?php if ($error): ?>
-  <section class="state error" role="alert"><?= h($error) ?></section>
+  <section class="state error" role="alert"><?= escapeHtml($error) ?></section>
 <?php elseif (!$items): ?>
   <section class="state">No meetings logged yet.</section>
 <?php else: ?>
 <div class="grid">
-  <?php include "$P/hero.php"; ?>
+  <?php include "$partialsDir/hero.php"; ?>
   <aside class="rail">
-    <?php include "$P/leaderboard.php"; ?>
-    <?php if ($streak) include "$P/streak.php"; ?>
-    <?php include "$P/qr.php"; ?>
+    <?php include "$partialsDir/leaderboard.php"; ?>
+    <?php if ($streak) include "$partialsDir/streak.php"; ?>
+    <?php include "$partialsDir/qr.php"; ?>
   </aside>
 </div>
-<?php include "$P/goal.php"; ?>
+<?php include "$partialsDir/goal.php"; ?>
 <?php endif; ?>
-<?php include "$P/ticker.php"; ?>
+<?php include "$partialsDir/ticker.php"; ?>

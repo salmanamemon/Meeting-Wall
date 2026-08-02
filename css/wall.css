@@ -117,6 +117,7 @@ body {
   display: flex;
   gap: 0.5vw;
   align-items: center;
+  flex-direction: column;
 }
 
 .icon-form {
@@ -172,27 +173,22 @@ body {
   right: 1.6vw;
   bottom: 2.8vh;
   left: auto;
-  width: auto;
-  display: flex;
-  align-items: center;
-  gap: 0;
   z-index: 3;
 }
 .hero-slider .swiper-pagination-bullet {
   width: 0.5vw;
   height: 0.5vw;
-  margin: 0;
+  margin: 0 0.75vw; /* wide enough spacing that the 2vw active pill fits without overlap */
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.35);
   opacity: 1;
-  transition: width 0.2s, background 0.2s;
+  transition: background 0.2s;
 }
 .hero-slider .swiper-pagination-bullet-active {
   width: 2vw;
   height: 0.5vw;
   border-radius: 999px;
   background: var(--orange);
-  margin: 0 0.3vw;
 }
 
 .story {
@@ -216,6 +212,31 @@ body {
   pointer-events: none;
 }
 
+/* "JUST NOW" badge on the slide, shown during a 2/2 celebration (non-clickable). */
+.just-now {
+  position: absolute;
+  top: 2.4vh;
+  right: 1.6vw;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 0.5vw;
+  padding: 0.8vh 1.2vw;
+  border-radius: 999px;
+  background: rgba(20, 12, 8, 0.85);
+  border: 1px solid rgba(255, 180, 120, 0.35);
+  color: var(--gold);
+  font-family: 'IBM Plex Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.9vw;
+  font-weight: 600;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+}
+.just-now[hidden] { display: none; }
+.just-now .bolt { font-size: 1.2vw; }
+
 .hero-meta {
   position: absolute;
   left: 2vw;
@@ -227,10 +248,9 @@ body {
   z-index: 2;
 }
 .hero-meta h2 {
-  font-size: 3.4vw;
+  font-size: 3vw;
   margin: 0;
   line-height: 0.95;
-  letter-spacing: -0.02em;
   color: #fff;
 }
 
@@ -255,6 +275,17 @@ body {
   height: 3vw;
   flex: 0 0 auto;
 }
+.avatar {
+  position: relative;
+  overflow: hidden;
+}
+.avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .avatar.big {
   width: 6vw;
   height: 6vw;
@@ -267,15 +298,17 @@ body {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.4vh;
-  overflow: hidden;
+  gap: 1vh;
 }
+/* Keep streak + QR always visible; the leaderboard takes the remaining space and clips internally if needed. */
+.rail .leaderboard { flex: 0 1 auto; min-height: 0; overflow: hidden; }
+.rail .streak, .rail .qr { flex: 0 0 auto; }
 
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 20px;
-  padding: 1.8vh 1.5vw;
+  padding: 1.4vh 1.5vw;
 }
 
 .card-head {
@@ -303,7 +336,7 @@ body {
   grid-template-columns: 2vw 3vw 1fr auto;
   align-items: center;
   gap: 0.8vw;
-  padding: 1vh 0.5vw;
+  padding: 0.7vh 0.5vw;
   border-radius: 14px;
 }
 .lb-row.lead {
@@ -321,6 +354,10 @@ body {
 .lb-name {
   font-size: 1.35vw;
   font-weight: 600;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .lb-count {
@@ -340,6 +377,9 @@ body {
   font-size: 1.35vw;
   font-weight: 600;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mini-label {
@@ -353,11 +393,21 @@ body {
   align-items: center;
   gap: 1vw;
 }
-.qr img {
-  width: 7vw;
-  height: 7vw;
+.qr .qr-code {
+  width: 5.5vw;
+  height: 5.5vw;
   border-radius: 10px;
   flex: 0 0 auto;
+  background: #fff7ed; /* light backing so the black QR is visible + scannable on the dark card */
+  padding: 0.5vw;
+  display: block;
+}
+.qr .qr-code svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background-color: #fff;
+  border-radius: 8px;
 }
 .qr .qr-title {
   font-size: 1.2vw;
@@ -375,8 +425,22 @@ body {
   max-width: 13vw;
 }
 
-/* Dynamic 6th row: the user on the active swiper slide, shown only when they're outside the top 5. */
+/* Leaderboard pages (3 rows each) stack in one grid cell and cross-fade through the full descending list. */
+.lb-list[data-rotate] {
+  display: grid;
+}
+.lb-list[data-rotate] .lb-page {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.lb-list[data-rotate] .lb-page.active {
+  opacity: 1;
+}
+
+/* Pinned 6th row: always mirrors the user on the active swiper slide. */
 .lb-active {
+  margin-top: 0.6vh;
   border: 1px dashed rgba(255, 106, 0, 0.5);
   background: linear-gradient(90deg, rgba(255, 46, 154, 0.12), transparent);
 }
