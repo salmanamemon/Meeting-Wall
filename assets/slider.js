@@ -29,7 +29,7 @@ function updateActiveLeaderRow() {
   let rankByOwner = {};
   try { rankByOwner = JSON.parse(document.getElementById('lb-data').textContent); } catch (error) {}
   const ownerRank = rankByOwner[ownerName];
-  activeRow.querySelector('.rank').textContent = ownerRank ? ownerRank.rank : '–';
+  activeRow.querySelector('.rank').textContent = ownerRank ? ownerRank.rank : '';
   const avatarCell = activeRow.querySelector('.avatar');
   avatarCell.textContent = activeSlide.dataset.initials || '';
   const photoUrl = activeSlide.dataset.photo;
@@ -124,23 +124,47 @@ function initSwiper() {
   updateGoalForSlide();
 }
 
+// Keep the "X AGO" labels live without re-rendering (so idle periods don't freeze the times).
+function agoLabel(unixSeconds) {
+  const seconds = Math.max(0, Math.floor(Date.now() / 1000) - unixSeconds);
+  if (seconds < 60) return 'JUST NOW';
+  if (seconds < 3600) return Math.floor(seconds / 60) + ' MIN AGO';
+  if (seconds < 86400) return Math.floor(seconds / 3600) + ' HR AGO';
+  return Math.floor(seconds / 86400) + ' DAY AGO';
+}
+function refreshAgos() {
+  clearInterval(window.meetingWallAgoTimer);
+  const update = () => document.querySelectorAll('.story').forEach((slide) => {
+    const unixSeconds = parseInt(slide.dataset.ts, 10);
+    const agoElement = slide.querySelector('.hero-ago');
+    if (unixSeconds && agoElement) agoElement.textContent = agoLabel(unixSeconds);
+  });
+  update();
+  window.meetingWallAgoTimer = setInterval(update, 30000);
+}
+
 function initWall() {
   initClock();
   bindFullscreen();
   initSwiper();
   rotateLeaderboard();
+  refreshAgos();
 }
 
 initWall();
 
-// Live updates: poll for changes; when the data changes, swap the whole dashboard in place — no reload.
+// Live updates: poll every 30s; when the data changes, swap the whole dashboard in place — no reload.
+// Runs forever (signature is always set, even on API error) so the wall self-recovers 24/7.
 // ponytail: re-render everything instead of diffing — same visible result, far less code. Server caches, so this is cheap.
-if (document.body.dataset.signature) setInterval(async () => {
+setInterval(async () => {
   try {
     const { signature, html } = await (await fetch('index.php?fragment=1', {cache: 'no-store'})).json();
     if (!signature || signature === document.body.dataset.signature) return;
+    const previousSlide = window.meetingWallSwiper ? window.meetingWallSwiper.realIndex : 0;
     document.body.dataset.signature = signature;
     document.getElementById('wall').innerHTML = html;
     initWall();
+    // Keep the viewer on the same slide across a refresh instead of jumping back to the first.
+    if (window.meetingWallSwiper && previousSlide > 0) window.meetingWallSwiper.slideToLoop(previousSlide, 0);
   } catch (error) {} // network blip: ignore, retry next tick
 }, 30000);

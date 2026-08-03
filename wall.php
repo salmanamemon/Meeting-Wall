@@ -4,9 +4,11 @@ global $config;
 $wall = wallData($items);
 $items = todayMeetings($items); // only today's cards (9AM–9PM) — previous days don't show
 $goal = max(1, (int) ($config['daily_goal'] ?? 2));
-// The goal is per user: each owner's own meetings today, capped at the goal. The bar follows the active slide.
+// The goal is per user: each owner's "Broker Meet" activities today (not "Customer Meeting"), capped at the goal.
+// The bar follows the active slide.
 $todayCountByOwner = [];
 foreach ($items as $meeting) {
+    if (($meeting['Activity_Type__c'] ?? '') !== 'Broker Meet') continue;
     $ownerName = $meeting['OwnerName'] ?? 'Unassigned';
     $todayCountByOwner[$ownerName] = ($todayCountByOwner[$ownerName] ?? 0) + 1;
 }
@@ -31,7 +33,7 @@ $partialsDir = __DIR__ . '/partials';
 <?php if ($error): ?>
   <section class="state error" role="alert"><?= escapeHtml($error) ?></section>
 <?php elseif (!$items): ?>
-  <section class="state">No meetings logged yet.</section>
+  <section class="state">No meetings logged yet today.</section>
 <?php else: ?>
 <div class="grid">
   <?php include "$partialsDir/hero.php"; ?>
