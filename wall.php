@@ -16,9 +16,12 @@ $firstOwner = $items[0]['OwnerName'] ?? '';
 $done = min($todayCountByOwner[$firstOwner] ?? 0, $goal); // initial value for the first slide's user
 $percent = (int) round($done / $goal * 100);
 // Weekly leaderboard comes from the dedicated API; fall back to the stories-derived ranking if it's down.
-$rankedLeaders = leaderboard() ?: $wall['leaders'];
+$rankedLeaders = leaderboard('THIS_WEEK') ?: $wall['leaders'];
 $wall['leaders'] = $rankedLeaders; // full ranking used for the pinned 6th-row rank lookup
 $wall['week'] = array_sum(array_column($rankedLeaders, 'count')); // whole-week total from the leaderboard API
+// MEETINGS TODAY stat: total from the leaderboard API's TODAY query (falls back to the activity count).
+$todayLeaders = leaderboard('TODAY');
+$wall['today'] = $todayLeaders ? array_sum(array_column($todayLeaders, 'count')) : $wall['today'];
 $leaders = $rankedLeaders;
 // Match hero cards to leaderboard profile photos by OwnerId (activity_list carries OwnerId too).
 $photoByOwnerId = [];

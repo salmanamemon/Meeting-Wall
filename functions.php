@@ -149,18 +149,19 @@ function stories(): array
     return $items;
 }
 
-// Weekly leaderboard from the middleware (aggregated per user). Returns [['name' => ..., 'count' => int], ...]
-// sorted by count desc. Returns [] on any failure so the caller can fall back. Cached 60s.
-function leaderboard(): array
+// Leaderboard from the middleware (aggregated per user) for a period: 'THIS_WEEK' (board) or 'TODAY' (stat).
+// Returns [['name' => ..., 'count' => int], ...] sorted by count desc. Returns [] on failure. Cached 60s per period.
+function leaderboard(string $period = 'THIS_WEEK'): array
 {
     global $config;
-    $cacheFile = sys_get_temp_dir() . '/darstories_leaderboard.json';
+    $cacheFile = sys_get_temp_dir() . '/darstories_leaderboard_' . preg_replace('/[^A-Za-z0-9_-]/', '', $period) . '.json';
     if (is_file($cacheFile) && time() - filemtime($cacheFile) < 60) {
         $cached = json_decode((string) file_get_contents($cacheFile), true);
         if (is_array($cached)) return $cached;
     }
-    $url = $config['leaderboard']['url'] ?? '';
-    if (!$url) return [];
+    $base = $config['leaderboard']['url'] ?? '';
+    if (!$base) return [];
+    $url = $base . '?meeting_date=' . urlencode($period);
     $curl = curl_init($url);
     curl_setopt_array($curl, [
         CURLOPT_RETURNTRANSFER => true,
