@@ -172,7 +172,8 @@ body {
   position: absolute;
   right: 1.6vw;
   bottom: 2.8vh;
-  left: auto;
+  left: auto !important; /* override Swiper's centering (left:50% + translateX), keep dynamic-bullet width */
+  transform: none !important;
   z-index: 3;
 }
 .hero-slider .swiper-pagination-bullet {
