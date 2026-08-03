@@ -74,21 +74,30 @@ function maybeCelebrate(ownerName, done, goal) {
   playCelebration();
 }
 
-// Show the "JUST NOW" badge and rain themed confetti for ~4s, then hide the badge.
+// Stop any running celebration immediately (called on every slide change so it never bleeds to the next person).
+function stopCelebration() {
+  clearInterval(window.meetingWallConfettiTimer);
+  clearTimeout(window.meetingWallCelebrationTimer);
+  if (window.confetti && window.confetti.reset) window.confetti.reset(); // clear particles already in flight
+  const justNowBadge = document.getElementById('just-now');
+  if (justNowBadge) justNowBadge.hidden = true;
+}
+
+// Show the badge and rain themed confetti for ~4s (or until the slide changes), then hide the badge.
 function playCelebration() {
+  stopCelebration(); // never stack celebrations
   const justNowBadge = document.getElementById('just-now');
   if (justNowBadge) justNowBadge.hidden = false;
   if (window.confetti) {
     const colors = ['#ff6a00', '#ff2e9a', '#f5b544', '#fff7ed'];
     const endTime = Date.now() + 4000;
     // Light bursts every 300ms (not every frame) so the confetti stays sparse.
-    const confettiTimer = setInterval(() => {
-      if (Date.now() > endTime) { clearInterval(confettiTimer); return; }
+    window.meetingWallConfettiTimer = setInterval(() => {
+      if (Date.now() > endTime) { clearInterval(window.meetingWallConfettiTimer); return; }
       window.confetti({particleCount: 3, angle: 60, spread: 55, startVelocity: 50, origin: {x: 0, y: 0.9}, colors});
       window.confetti({particleCount: 3, angle: 120, spread: 55, startVelocity: 50, origin: {x: 1, y: 0.9}, colors});
     }, 300);
   }
-  clearTimeout(window.meetingWallCelebrationTimer);
   window.meetingWallCelebrationTimer = setTimeout(() => { if (justNowBadge) justNowBadge.hidden = true; }, 4500);
 }
 
@@ -119,7 +128,7 @@ function initSwiper() {
     autoplay: slideCount > 1 ? {delay: 6000, disableOnInteraction: false, pauseOnMouseEnter: true} : false,
     pagination: {el: heroElement.querySelector('.swiper-pagination'), clickable: true, dynamicBullets: true, dynamicMainBullets: 1},
   });
-  window.meetingWallSwiper.on('slideChange', () => { updateActiveLeaderRow(); updateGoalForSlide(); });
+  window.meetingWallSwiper.on('slideChange', () => { stopCelebration(); updateActiveLeaderRow(); updateGoalForSlide(); });
   updateActiveLeaderRow();
   updateGoalForSlide();
 }

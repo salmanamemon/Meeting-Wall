@@ -213,7 +213,7 @@ body {
   pointer-events: none;
 }
 
-/* "JUST NOW" badge on the slide, shown during a 2/2 celebration (non-clickable). */
+/* "GOAL COMPLETE" badge on the slide, shown during a 2/2 celebration (non-clickable). */
 .just-now {
   position: absolute;
   top: 2.4vh;
@@ -221,22 +221,21 @@ body {
   z-index: 4;
   display: flex;
   align-items: center;
-  gap: 0.5vw;
-  padding: 0.8vh 1.2vw;
+  gap: 0.7vw;
+  padding: 1.2vh 1.8vw;
   border-radius: 999px;
-  background: rgba(20, 12, 8, 0.85);
-  border: 1px solid rgba(255, 180, 120, 0.35);
-  color: var(--gold);
+  background: linear-gradient(135deg, var(--orange), var(--pink));
+  color: #fff;
   font-family: 'IBM Plex Mono', monospace;
   text-transform: uppercase;
-  letter-spacing: 0.15em;
-  font-size: 0.9vw;
+  letter-spacing: 0.14em;
+  font-size: 1.5vw;
   font-weight: 600;
   pointer-events: none;
-  backdrop-filter: blur(4px);
+  box-shadow: 0 0.6vh 2vh rgba(255, 46, 154, 0.35);
 }
 .just-now[hidden] { display: none; }
-.just-now .bolt { font-size: 1.2vw; }
+.just-now .bolt { font-size: 1.8vw; }
 
 .hero-meta {
   position: absolute;
