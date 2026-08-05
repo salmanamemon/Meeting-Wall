@@ -18,7 +18,8 @@ function bindFullscreen() {
     document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
 }
 
-// Pinned 6th leaderboard row: always mirrors the user on the active swiper slide (with their weekly rank + count).
+// Pinned leaderboard row: mirrors the active swiper slide's user, with their rank + count for the
+// currently-displayed period (this week or today).
 function updateActiveLeaderRow() {
   const swiper = window.meetingWallSwiper;
   const activeRow = document.getElementById('lb-active');
@@ -26,8 +27,9 @@ function updateActiveLeaderRow() {
   const activeSlide = swiper.slides[swiper.activeIndex]; // loop duplicates carry the same data
   const ownerName = activeSlide && activeSlide.dataset.owner;
   if (!ownerName) { activeRow.hidden = true; return; }
+  const period = window.meetingWallLeaderboardPeriod === 'TODAY' ? 'today' : 'week';
   let rankByOwner = {};
-  try { rankByOwner = JSON.parse(document.getElementById('lb-data').textContent); } catch (error) {}
+  try { rankByOwner = JSON.parse(document.getElementById('lb-ranks-' + period).textContent); } catch (error) {}
   const ownerRank = rankByOwner[ownerName];
   activeRow.querySelector('.rank').textContent = ownerRank ? ownerRank.rank : '';
   const avatarCell = activeRow.querySelector('.avatar');
@@ -101,18 +103,29 @@ function playCelebration() {
   window.meetingWallCelebrationTimer = setTimeout(() => { if (justNowBadge) justNowBadge.hidden = true; }, 4500);
 }
 
-// Cross-fade the leaderboard through its pages of 3 (present only when there are more than 3 users).
+// Show one leaderboard page: cross-fade it in, sync the badge to its period, and refresh the pinned row.
+function setLeaderboardPage(pages, index) {
+  pages.forEach((page, position) => page.classList.toggle('active', position === index));
+  const period = pages[index] ? pages[index].dataset.period : '';
+  const badge = document.getElementById('lb-badge');
+  if (badge && period) badge.textContent = period;
+  window.meetingWallLeaderboardPeriod = period;
+  updateActiveLeaderRow();
+}
+
+// Cross-fade through the leaderboard pages in sequence: this-week pages, then today pages, on loop.
 function rotateLeaderboard() {
   clearInterval(window.meetingWallLeaderboardTimer);
-  const leaderboardList = document.querySelector('.lb-list[data-rotate]');
+  const leaderboardList = document.querySelector('.lb-list');
   if (!leaderboardList) return;
   const pages = [...leaderboardList.querySelectorAll('.lb-page')];
-  if (pages.length < 2) return;
+  if (!pages.length) return;
   let currentPage = 0;
+  setLeaderboardPage(pages, currentPage);
+  if (pages.length < 2) return;
   window.meetingWallLeaderboardTimer = setInterval(() => {
-    pages[currentPage].classList.remove('active');
     currentPage = (currentPage + 1) % pages.length;
-    pages[currentPage].classList.add('active');
+    setLeaderboardPage(pages, currentPage);
   }, 6000);
 }
 

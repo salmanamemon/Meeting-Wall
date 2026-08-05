@@ -151,10 +151,11 @@ function stories(): array
 
 // Leaderboard from the middleware (aggregated per user) for a period: 'THIS_WEEK' (board) or 'TODAY' (stat).
 // Returns [['name' => ..., 'count' => int], ...] sorted by count desc. Returns [] on failure. Cached 60s per period.
-function leaderboard(string $period = 'THIS_WEEK'): array
+function leaderboard(string $period = 'THIS_WEEK', ?string $meetingType = null): array
 {
     global $config;
-    $cacheFile = sys_get_temp_dir() . '/darstories_leaderboard_' . preg_replace('/[^A-Za-z0-9_-]/', '', $period) . '.json';
+    $cacheKey = $period . ($meetingType ? '-' . $meetingType : '');
+    $cacheFile = sys_get_temp_dir() . '/darstories_leaderboard_' . preg_replace('/[^A-Za-z0-9_-]/', '', $cacheKey) . '.json';
     if (is_file($cacheFile) && time() - filemtime($cacheFile) < 60) {
         $cached = json_decode((string) file_get_contents($cacheFile), true);
         if (is_array($cached)) return $cached;
@@ -162,6 +163,7 @@ function leaderboard(string $period = 'THIS_WEEK'): array
     $base = $config['leaderboard']['url'] ?? '';
     if (!$base) return [];
     $url = $base . '?meeting_date=' . urlencode($period);
+    if ($meetingType) $url .= '&meeting_type=' . urlencode($meetingType);
     $curl = curl_init($url);
     curl_setopt_array($curl, [
         CURLOPT_RETURNTRANSFER => true,
@@ -188,6 +190,44 @@ function leaderboard(string $period = 'THIS_WEEK'): array
     usort($leaders, fn(array $first, array $second) => $second['count'] <=> $first['count']);
     file_put_contents($cacheFile, json_encode($leaders), LOCK_EX);
     return $leaders;
+}
+
+// From a desc-ranked leader list, return the top-3-distinct-score tiers (each leader tagged with its
+// competition rank) plus a name => ['rank','count'] map for lookups (ties share a rank).
+function leaderboardTiers(array $rankedLeaders): array
+{
+    $allCounts = array_values(array_unique(array_column($rankedLeaders, 'count')));
+    rsort($allCounts);
+    $rankByCount = [];
+    foreach ($allCounts as $position => $count) $rankByCount[$count] = $position + 1;
+    $rankByOwner = [];
+    foreach ($rankedLeaders as $leader) {
+        $rankByOwner[$leader['name']] = ['rank' => $rankByCount[$leader['count']], 'count' => $leader['count']];
+    }
+    $topThreeCounts = array_slice($allCounts, 0, 3);
+    $tierLeaders = [];
+    foreach ($rankedLeaders as $leader) {
+        if (!in_array($leader['count'], $topThreeCounts, true)) continue;
+        $leader['rank'] = $rankByCount[$leader['count']];
+        $tierLeaders[] = $leader;
+    }
+    return ['leaders' => $tierLeaders, 'ranks' => $rankByOwner];
+}
+
+// Ticker phrases: the `text` of each quote in assets/quotes.json ({ quotes: [ { text } ] }).
+// Falls back to the config `ticker` list if the file is missing/empty. Cached for the request.
+function tickerPhrases(): array
+{
+    global $config;
+    static $phrases;
+    if ($phrases !== null) return $phrases;
+    $file = __DIR__ . '/assets/quotes.json';
+    if (is_file($file)) {
+        $data = json_decode((string) file_get_contents($file), true);
+        $texts = array_values(array_filter(array_column($data['quotes'] ?? [], 'text'), 'is_string'));
+        if ($texts) return $phrases = $texts;
+    }
+    return $phrases = $config['ticker'] ?? ['BOOKED BEATS PERFECT.', 'MOMENTUM IS A TEAM SPORT.'];
 }
 
 // Renders the story cards to an HTML string, reusing the same partial the hero uses.
