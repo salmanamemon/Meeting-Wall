@@ -1,0 +1,8 @@
+node_modules/**
+vendor/**
+generated/**
+dist/**
+build/**
+*.generated.*
+*.min.js
+*.lock
