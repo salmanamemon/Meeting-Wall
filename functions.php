@@ -215,19 +215,14 @@ function leaderboardTiers(array $rankedLeaders): array
 }
 
 // Ticker phrases: the `text` of each quote in assets/quotes.json ({ quotes: [ { text } ] }).
-// Falls back to the config `ticker` list if the file is missing/empty. Cached for the request.
+// quotes.json is the ONLY source — no config/other fallback. Cached for the request.
 function tickerPhrases(): array
 {
-    global $config;
     static $phrases;
     if ($phrases !== null) return $phrases;
     $file = __DIR__ . '/assets/quotes.json';
-    if (is_file($file)) {
-        $data = json_decode((string) file_get_contents($file), true);
-        $texts = array_values(array_filter(array_column($data['quotes'] ?? [], 'text'), 'is_string'));
-        if ($texts) return $phrases = $texts;
-    }
-    return $phrases = $config['ticker'] ?? ['BOOKED BEATS PERFECT.', 'MOMENTUM IS A TEAM SPORT.'];
+    $data = is_file($file) ? json_decode((string) file_get_contents($file), true) : null;
+    return $phrases = array_values(array_filter(array_column($data['quotes'] ?? [], 'text'), 'is_string'));
 }
 
 // Renders the story cards to an HTML string, reusing the same partial the hero uses.
@@ -235,6 +230,9 @@ function renderSlides(array $items): string { ob_start(); include __DIR__ . '/pa
 
 // Renders the whole data-driven dashboard (#wall contents). Shared by index.php and the ?fragment=1 poll.
 function renderWall(array $items, string $error = ''): string { ob_start(); include __DIR__ . '/wall.php'; return ob_get_clean(); }
+
+// Renders the v1 leaderboard-dashboard (#wall contents). Used by index_v1.php.
+function renderWallV1(): string { ob_start(); include __DIR__ . '/wall_v1.php'; return ob_get_clean(); }
 
 // Meeting timestamp from whichever date field is present.
 function meetingTs(array $item): ?int

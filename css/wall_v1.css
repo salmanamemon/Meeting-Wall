@@ -1,0 +1,84 @@
+/* v1 leaderboard dashboard — extends css/wall.css. Only the bits that differ from the main wall. */
+
+/* Main area: full-width 2x2 leaderboard grid. */
+.lb-quad {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 1.4vw;
+}
+
+/* Bottom row: goal (fills) with the streak + QR cards beside it. */
+.goal-row {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 1.4vw;
+  align-items: stretch;
+}
+.goal-row .goal { flex: 1 1 auto; }
+.goal-row .streak { flex: 0 0 20vw; }
+.goal-row .qr { flex: 0 0 22vw; }
+.lb-card {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.lb-card .lb-list {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.lb-empty {
+  color: var(--muted);
+  font-size: 1vw;
+  padding: 1vh 0.5vw;
+}
+
+/* Goal v1: person's photo + name, then the existing bar/number. */
+.goal-v1 { position: relative; gap: 1.2vw; }
+.goal-avatar {
+  width: 4vw;
+  height: 4vw;
+  font-size: 1.3vw;
+  flex: 0 0 auto;
+}
+.goal-person {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 12vw;
+}
+.goal-person .mini-label { margin: 0 0 0.3vh; }
+.goal-person-name {
+  font-family: 'Archivo', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.5vw;
+  margin: 0;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Celebration badge floats just above the goal bar in this version. */
+.goal-v1 .just-now {
+  top: auto;
+  bottom: 100%;
+  right: 1.6vw;
+  margin-bottom: 1vh;
+}
+
+/* Responsive: stack on tablet/phone (body already switches to scroll < 1000px in wall.css). */
+@media (max-width: 1000px) {
+  .lb-quad { grid-template-columns: 1fr 1fr; grid-template-rows: none; gap: 12px; }
+  .lb-card { min-height: 26vh; }
+  .lb-empty { font-size: 14px; }
+  .goal-row { flex-direction: column; }
+  .goal-row .streak, .goal-row .qr { flex: 0 0 auto; width: auto; }
+  .goal-avatar { width: 44px; height: 44px; font-size: 15px; }
+  .goal-person { min-width: 0; }
+  .goal-person-name { font-size: 18px; }
+}
+@media (max-width: 620px) {
+  .lb-quad { grid-template-columns: 1fr; }
+}
