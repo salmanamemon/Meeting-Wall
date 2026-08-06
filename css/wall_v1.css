@@ -47,18 +47,18 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-width: 12vw;
+  width: 12vw;
 }
 .goal-person .mini-label { margin: 0 0 0.3vh; }
 .goal-person-name {
   font-family: 'Archivo', system-ui, sans-serif;
   font-weight: 800;
-  font-size: 1.5vw;
+  font-size: 1.1vw;
   margin: 0;
   color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  text-transform: capitalize;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 /* Celebration badge floats just above the goal bar in this version. */
 .goal-v1 .just-now {

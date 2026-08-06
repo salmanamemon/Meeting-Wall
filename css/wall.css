@@ -342,7 +342,7 @@ body {
   grid-template-columns: 2vw 3vw 1fr auto;
   align-items: center;
   gap: 0.8vw;
-  padding: 0.7vh 0.5vw;
+  padding: 0.45vh 0.5vw;
   border-radius: 14px;
 }
 .lb-row.lead {
