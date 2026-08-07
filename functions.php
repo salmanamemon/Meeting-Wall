@@ -20,11 +20,19 @@ function db(): PDO
 {
     global $config;
     static $pdo;
-    return $pdo ??= new PDO(
-        "mysql:host={$config['db']['host']};dbname={$config['db']['name']};charset=utf8mb4",
-        $config['db']['user'], $config['db']['pass'],
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
-    );
+    if ($pdo) return $pdo;
+    try {
+        $pdo = new PDO(
+            "mysql:host={$config['db']['host']};dbname={$config['db']['name']};charset=utf8mb4",
+            $config['db']['user'], $config['db']['pass'],
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
+        );
+        return $pdo;
+    } catch (PDOException $e) {
+        error_log('DB connection failed: ' . $e->getMessage());
+        http_response_code(500);
+        exit('Database connection failed. Check config.php DB credentials.');
+    }
 }
 
 function csrf(): string
