@@ -24,10 +24,22 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden; /* clip overflowing pages inside the card, like the main wall's .leaderboard */
 }
 .lb-card .lb-list {
   flex: 1 1 auto;
   min-height: 0;
+}
+.lb-card .lb-page {
+  height: 100%;
+  justify-content: space-evenly;
+  min-height: 0;
+  gap: 0.4vh;
+}
+.lb-card .lb-row { padding: 0.2vh 0.5vw; }
+.lb-card .avatar {
+  width: min(2.4vw, 5vh);
+  height: min(2.4vw, 5vh);
 }
 .lb-empty {
   color: var(--muted);
