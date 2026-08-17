@@ -41,6 +41,7 @@
   width: min(2.4vw, 5vh);
   height: min(2.4vw, 5vh);
 }
+.badge-week { color: var(--pink); border-color: color-mix(in srgb, var(--pink) 40%, transparent); }
 .lb-empty {
   color: var(--muted);
   font-size: 1vw;

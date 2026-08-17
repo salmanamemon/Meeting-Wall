@@ -6,7 +6,7 @@ $tiers = leaderboardTiers($cardLeaders);
 $pages = array_chunk($tiers['leaders'], 3);
 ?>
 <section class="card leaderboard lb-card">
-  <div class="card-head"><h3><?= escapeHtml($cardTitle) ?></h3><span class="badge"><?= escapeHtml($cardBadge) ?></span></div>
+  <div class="card-head"><h3><?= escapeHtml($cardTitle) ?></h3><span class="badge<?= $cardBadge === 'THIS WEEK' ? ' badge-week' : '' ?>"><?= escapeHtml($cardBadge) ?></span></div>
   <?php if (!$pages): ?>
     <div class="lb-empty">No meetings yet.</div>
   <?php else: ?>
