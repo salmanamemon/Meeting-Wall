@@ -22,10 +22,10 @@ $apiDown = !$weekAll && !$todayAll && !$brokerWeek && !$brokerToday && !$custome
   <section class="state error" role="alert">Leaderboard is unavailable right now. Please try again later.</section>
 <?php else: ?>
 <div class="lb-quad">
-  <?php $cardTitle = 'BROKERS';   $cardBadge = 'THIS WEEK'; $cardLeaders = $brokerWeek;    include "$partialsDir/leaderboard_card.php"; ?>
   <?php $cardTitle = 'BROKERS';   $cardBadge = 'TODAY';     $cardLeaders = $brokerToday;   include "$partialsDir/leaderboard_card.php"; ?>
-  <?php $cardTitle = 'CUSTOMERS'; $cardBadge = 'THIS WEEK'; $cardLeaders = $customerWeek;  include "$partialsDir/leaderboard_card.php"; ?>
+  <?php $cardTitle = 'BROKERS';   $cardBadge = 'THIS WEEK'; $cardLeaders = $brokerWeek;    include "$partialsDir/leaderboard_card.php"; ?>
   <?php $cardTitle = 'CUSTOMERS'; $cardBadge = 'TODAY';     $cardLeaders = $customerToday; include "$partialsDir/leaderboard_card.php"; ?>
+  <?php $cardTitle = 'CUSTOMERS'; $cardBadge = 'THIS WEEK'; $cardLeaders = $customerWeek;  include "$partialsDir/leaderboard_card.php"; ?>
 </div>
 <div class="goal-row">
   <?php include "$partialsDir/goal_v1.php"; ?>
