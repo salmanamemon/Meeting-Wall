@@ -35,7 +35,7 @@
 }
 .lb-card .lb-page {
   height: 100%;
-  justify-content: space-evenly;
+  justify-content: space-between; /* space-evenly centers a lone row; space-between pins first row to top, still spreads 2-3 */
   min-height: 0;
   gap: 0.4vh;
 }
