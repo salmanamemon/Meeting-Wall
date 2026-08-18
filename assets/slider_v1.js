@@ -101,11 +101,15 @@ function initGoalCarousel() {
     document.getElementById('goal-percent').textContent = percent + '%';
     maybeCelebrate(person.name, person.done, goal);
   };
-  let currentIndex = 0;
+  // Resume where the previous render left off so the 30s poll updates counts in place instead of
+  // snapping the card back to the first broker.
+  let currentIndex = (window.meetingWallGoalIndex || 0) % people.length;
+  window.meetingWallGoalIndex = currentIndex;
   showPerson(currentIndex);
   if (people.length < 2) return;
   window.meetingWallGoalTimer = setInterval(() => {
     currentIndex = (currentIndex + 1) % people.length;
+    window.meetingWallGoalIndex = currentIndex;
     showPerson(currentIndex);
   }, 5000);
 }
