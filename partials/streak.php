@@ -15,12 +15,37 @@ if ($leader) {
 if ($runnerUp && $gap <= 2) { // close race — make the rivalry visible
     $moments[] = ['ico' => '&#9876;&#65039;', 'label' => 'NECK AND NECK', 'text' => escapeHtml($leader['name']) . ' vs ' . escapeHtml($runnerUp['name'])];
 }
-if ($runnerUp && $gap >= 1) { // someone can still overtake #1
-    $moments[] = ['ico' => '&#127937;', 'label' => 'CHASING THE LEAD', 'text' => escapeHtml($runnerUp['name']) . ' &mdash; ' . $gap . ' to catch ' . escapeHtml($leader['name'])];
+// Everyone tied at second place (same count, behind #1) gets a slide chasing #1 — same gap for all.
+$secondCount = null;
+foreach ($board as $person) {
+    if ($person['count'] < $leader['count']) { $secondCount = $person['count']; break; }
+}
+if ($secondCount !== null) {
+    $behind = $leader['count'] - $secondCount;
+    foreach ($board as $person) {
+        if ($person['count'] !== $secondCount) continue;
+        $moments[] = ['ico' => '&#127937;', 'label' => 'CHASING THE LEAD', 'text' => escapeHtml($person['name']) . ' &mdash; ' . $behind . ' to catch ' . escapeHtml($leader['name'])];
+    }
 }
 $activeToday = count(array_filter($brokerToday ?? [], fn($broker) => ($broker['count'] ?? 0) > 0));
 if ($activeToday >= 2) { // the whole floor is moving today
     $moments[] = ['ico' => '&#129309;', 'label' => 'WHOLE FLOOR MOVING', 'text' => $activeToday . ' brokers active today'];
+}
+// Customer-meeting race this week: everyone tied at second place chases #1 (same gap for all).
+$customerBoard = array_values(array_filter($customerWeek ?? [], fn($leader) => ($leader['count'] ?? 0) > 0));
+$customerLeader = $customerBoard[0] ?? null;
+if ($customerLeader) {
+    $customerSecondCount = null;
+    foreach ($customerBoard as $person) {
+        if ($person['count'] < $customerLeader['count']) { $customerSecondCount = $person['count']; break; }
+    }
+    if ($customerSecondCount !== null) {
+        $customerBehind = $customerLeader['count'] - $customerSecondCount;
+        foreach ($customerBoard as $person) {
+            if ($person['count'] !== $customerSecondCount) continue;
+            $moments[] = ['ico' => '&#127942;', 'label' => 'CUSTOMER RACE', 'text' => escapeHtml($person['name']) . ' &mdash; ' . $customerBehind . ' to catch ' . escapeHtml($customerLeader['name'])];
+        }
+    }
 }
 if (!$moments) return;
 ?>
