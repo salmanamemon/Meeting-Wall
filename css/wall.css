@@ -386,9 +386,7 @@ body {
   font-size: 1.35vw;
   font-weight: 600;
   margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  word-break: break-word;
 }
 
 .mini-label {

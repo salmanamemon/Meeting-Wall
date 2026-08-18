@@ -18,7 +18,9 @@
   align-items: stretch;
 }
 .goal-row .goal { flex: 1 1 auto; }
-.goal-row .streak { flex: 0 0 20vw; }
+.goal-row .streak { flex: 0 0 25vw; }
+.streak .lb-list { flex: 1 1 auto; min-width: 0; align-items: center; }
+.streak .streak-moment { flex-direction: row; align-items: center; gap: 1vw; }
 .goal-row .qr { flex: 0 0 22vw; }
 .lb-card {
   min-height: 0;
