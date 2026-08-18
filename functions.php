@@ -188,7 +188,7 @@ function leaderboard(string $period = 'THIS_WEEK', ?string $meetingType = null):
 	$base = $config['leaderboard']['url'] ?? '';
 	if (!$base)
 		return [];
-	$url = $base . '?meeting_date=' . urlencode($period);
+	$url = $base . '?meeting_date=' . urlencode($period) . '&leader_board_type=meeting';
 	if ($meetingType)
 		$url .= '&meeting_type=' . urlencode($meetingType);
 	$curl = curl_init($url);

@@ -14,6 +14,7 @@ $goal = max(1, (int) ($config['daily_goal'] ?? 2));
 $streak = $brokerWeek[0] ?? ($weekAll[0] ?? null);
 $phrases = tickerPhrases();
 $partialsDir = __DIR__ . '/partials';
+include "$partialsDir/video_data.php"; // sets $videoToday, $videoWeek, $hasVideo (separate video endpoint)
 // Consider the API down only if every leaderboard came back empty.
 $apiDown = !$weekAll && !$todayAll && !$brokerWeek && !$brokerToday && !$customerWeek && !$customerToday;
 ?>
@@ -21,7 +22,7 @@ $apiDown = !$weekAll && !$todayAll && !$brokerWeek && !$brokerToday && !$custome
 <?php if ($apiDown): ?>
 	<section class="state error" role="alert">Leaderboard is unavailable right now. Please try again later.</section>
 <?php else: ?>
-	<div class="lb-quad">
+	<div class="lb-quad<?= $hasVideo ? ' has-video' : '' ?>">
 		<?php $cardTitle = 'BROKER MEETINGS';
 		$cardBadge = 'TODAY';
 		$cardLeaders = $brokerToday;
@@ -38,6 +39,16 @@ $apiDown = !$weekAll && !$todayAll && !$brokerWeek && !$brokerToday && !$custome
 		$cardBadge = 'THIS WEEK';
 		$cardLeaders = $customerWeek;
 		include "$partialsDir/leaderboard_card.php"; ?>
+		<?php if ($hasVideo): ?>
+			<?php $cardTitle = 'VIDEOS UPLOADED';
+			$cardBadge = 'TODAY';
+			$cardLeaders = $videoToday;
+			include "$partialsDir/leaderboard_card.php"; ?>
+			<?php $cardTitle = 'VIDEOS UPLOADED';
+			$cardBadge = 'THIS WEEK';
+			$cardLeaders = $videoWeek;
+			include "$partialsDir/leaderboard_card.php"; ?>
+		<?php endif; ?>
 	</div>
 	<div class="goal-row">
 		<?php include "$partialsDir/goal_v1.php"; ?>

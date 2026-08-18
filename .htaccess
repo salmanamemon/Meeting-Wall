@@ -1,0 +1,13 @@
+RewriteEngine On
+
+# Hide the .php extension: redirect external ".../name.php" to ".../name".
+# GET only, so POST form submits (login.php, logout.php) aren't turned into GETs by a 301.
+RewriteCond %{REQUEST_METHOD} GET
+RewriteCond %{THE_REQUEST} \s/+([^.\s?]+)\.php[\s?] [NC]
+RewriteRule ^ /%1 [R=301,L]
+
+# Serve "/name" from "name.php" when there's no real file/dir at that path.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.php -f
+RewriteRule ^(.+?)/?$ $1.php [L]

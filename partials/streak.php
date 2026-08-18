@@ -10,7 +10,7 @@ $gap = ($leader && $runnerUp) ? $leader['count'] - $runnerUp['count'] : null;
 
 $moments = [];
 if ($leader) {
-    $moments[] = ['ico' => '&#128293;', 'label' => 'ON A STREAK', 'text' => escapeHtml($leader['name']) . ' &mdash; ' . (int) $leader['count'] . ' this week'];
+    $moments[] = ['ico' => '&#128293;', 'label' => 'ON A STREAK', 'text' => escapeHtml($leader['name']) . ' &mdash; ' . (int) $leader['count'] . ' broker meets this week'];
 }
 if ($runnerUp && $gap <= 2) { // close race — make the rivalry visible
     $moments[] = ['ico' => '&#9876;&#65039;', 'label' => 'NECK AND NECK', 'text' => escapeHtml($leader['name']) . ' vs ' . escapeHtml($runnerUp['name'])];
@@ -24,7 +24,7 @@ if ($secondCount !== null) {
     $behind = $leader['count'] - $secondCount;
     foreach ($board as $person) {
         if ($person['count'] !== $secondCount) continue;
-        $moments[] = ['ico' => '&#127937;', 'label' => 'CHASING THE LEAD', 'text' => escapeHtml($person['name']) . ' &mdash; ' . $behind . ' to catch ' . escapeHtml($leader['name'])];
+        $moments[] = ['ico' => '&#127937;', 'label' => 'CHASING THE LEAD (BROKER)', 'text' => escapeHtml($person['name']) . ' &mdash; ' . $behind . ' to catch ' . escapeHtml($leader['name'])];
     }
 }
 $activeToday = count(array_filter($brokerToday ?? [], fn($broker) => ($broker['count'] ?? 0) > 0));

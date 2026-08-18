@@ -1,6 +1,7 @@
 /* v1 leaderboard dashboard — extends css/wall.css. Only the bits that differ from the main wall. */
 
-/* Main area: full-width 2x2 leaderboard grid. */
+/* Main area: 2x2 meeting grid. With videos live (.has-video) it becomes 3 columns, one category per
+   column (Broker | Customer | Videos) with TODAY on top and THIS WEEK below — column-major fill. */
 .lb-quad {
   flex: 1 1 auto;
   min-height: 0;
@@ -8,6 +9,10 @@
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
   gap: 1.4vw;
+}
+.lb-quad.has-video {
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-auto-flow: column; /* fill down each column (Today over This Week) before moving right */
 }
 
 /* Bottom row: goal (fills) with the streak + QR cards beside it. */
@@ -35,9 +40,9 @@
 }
 .lb-card .lb-page {
   height: 100%;
-  justify-content: space-between; /* space-evenly centers a lone row; space-between pins first row to top, still spreads 2-3 */
+  justify-content: normal;
   min-height: 0;
-  gap: 0.4vh;
+  gap: 1.2vh;
 }
 .lb-card .lb-row { padding: 0.2vh 0.5vw; }
 .lb-card .avatar {
