@@ -356,6 +356,9 @@ body {
   font-size: 1.7vw;
   color: var(--text);
 }
+.rank sup{
+  font-size: 0.9vw;
+}
 
 .lb-name {
   font-size: 1.35vw;
