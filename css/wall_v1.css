@@ -26,6 +26,7 @@
   flex-direction: column;
   overflow: hidden; /* clip overflowing pages inside the card, like the main wall's .leaderboard */
 }
+.lb-card .card-head h3 { font-size: 1.4vw; } /* smaller so longer titles fit next to the badge */
 .lb-card .lb-list {
   flex: 1 1 auto;
   min-height: 0;
