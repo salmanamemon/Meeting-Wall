@@ -54,7 +54,8 @@ $apiDown = !$weekAll && !$todayAll && !$brokerWeek && !$brokerToday && !$custome
 		<?php include "$partialsDir/goal_v1.php"; ?>
 		<?php if ($streak)
 			include "$partialsDir/streak.php"; ?>
-		<?php include "$partialsDir/qr.php"; ?>
+		<?php // include "$partialsDir/qr.php"; // QR "GET THE APP" card — hidden for now, kept for later ?>
+		<?php include "$partialsDir/streak_video.php"; ?>
 	</div>
 <?php endif; ?>
 <?php include "$partialsDir/ticker.php"; ?>
