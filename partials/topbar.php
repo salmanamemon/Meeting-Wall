@@ -8,12 +8,15 @@
 		<div class="stat">
 			<p class="stat-label">MEETINGS TODAY</p>
 			<p class="stat-num"><?= $wall['today'] ?></p>
-			<?php if ($wall['todayRms']): ?><p class="stat-sub">BY <?= $wall['todayRms'] ?> AGENT<?= $wall['todayRms'] == 1 ? '' : 'S' ?></p><?php endif; ?>
+			<?php if ($wall['todayRms']): ?>
+				<p class="stat-sub">BY <?= $wall['todayRms'] ?> RM<?= $wall['todayRms'] == 1 ? '' : 's' ?></p>
+			<?php endif; ?>
 		</div>
 		<div class="stat">
 			<p class="stat-label">THIS WEEK</p>
 			<p class="stat-num pink"><?= $wall['week'] ?></p>
-			<?php if ($wall['weekRms']): ?><p class="stat-sub">BY <?= $wall['weekRms'] ?> AGENT<?= $wall['weekRms'] == 1 ? '' : 'S' ?></p><?php endif; ?>
+			<?php if ($wall['weekRms']): ?>
+				<p class="stat-sub">BY <?= $wall['weekRms'] ?> RM<?= $wall['weekRms'] == 1 ? '' : 's' ?></p><?php endif; ?>
 		</div>
 		<div class="clock">
 			<p id="clock" class="clock-time">--:--</p>
