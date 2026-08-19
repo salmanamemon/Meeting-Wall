@@ -4,7 +4,7 @@ global $config;
 // Top-bar totals (all meetings), same as the main wall.
 $weekAll = leaderboard('THIS_WEEK');
 $todayAll = leaderboard('TODAY');
-$wall = ['week' => array_sum(array_column($weekAll, 'count')), 'today' => array_sum(array_column($todayAll, 'count'))];
+$wall = ['week' => array_sum(array_column($weekAll, 'count')), 'today' => array_sum(array_column($todayAll, 'count')), 'todayRms' => count($todayAll), 'weekRms' => count($weekAll)]; // Rms = distinct owners in each leaderboard
 // The four leaderboards.
 $brokerWeek = leaderboard('THIS_WEEK', 'agency');
 $brokerToday = leaderboard('TODAY', 'agency');

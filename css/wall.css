@@ -95,6 +95,12 @@ body {
 .stat .stat-num.pink {
   color: var(--pink);
 }
+.stat .stat-sub {
+  font-size: 0.6vw;
+  color: var(--muted);
+  margin: 0.6vh 0 0;
+  letter-spacing: 0.05em;
+}
 
 .clock {
   display: flex;
