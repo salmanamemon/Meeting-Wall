@@ -15,7 +15,7 @@ $buildVideoMoments = function (array $rawBoard, string $periodText, string $peri
     $moments = [];
     $moments[] = ['ico' => '&#127916;', 'label' => 'TOP UPLOADER &middot; ' . $periodTag, 'text' => escapeHtml($leader['name']) . ' &mdash; ' . (int) $leader['count'] . ' videos ' . $periodText];
     if ($runnerUp && $gap <= 2) { // close race — make the rivalry visible
-        $moments[] = ['ico' => '&#9876;&#65039;', 'label' => 'NECK AND NECK &middot; ' . $periodTag, 'text' => escapeHtml($leader['name']) . ' vs ' . escapeHtml($runnerUp['name'])];
+        $moments[] = ['ico' => '&#9876;&#65039;', 'label' => 'NECK AND NECK &middot; ' . $periodTag . ' (VIDEOS)', 'text' => escapeHtml($leader['name']) . ' vs ' . escapeHtml($runnerUp['name'])];
     }
     // Everyone tied at second place chases #1 (same gap for all).
     $secondCount = null;
@@ -26,7 +26,7 @@ $buildVideoMoments = function (array $rawBoard, string $periodText, string $peri
         $behind = $leader['count'] - $secondCount;
         foreach ($board as $person) {
             if ($person['count'] !== $secondCount) continue;
-            $moments[] = ['ico' => '&#127937;', 'label' => 'CHASING THE LEAD &middot; ' . $periodTag, 'text' => escapeHtml($person['name']) . ' &mdash; ' . $behind . ' to catch ' . escapeHtml($leader['name'])];
+            $moments[] = ['ico' => '&#127937;', 'label' => 'CHASING THE LEAD &middot; ' . $periodTag . ' (VIDEOS)', 'text' => escapeHtml($person['name']) . ' &mdash; ' . $behind . ' to catch ' . escapeHtml($leader['name'])];
         }
     }
     return $moments;
