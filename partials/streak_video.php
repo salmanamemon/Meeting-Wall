@@ -1,31 +1,42 @@
 <?php
-/** Video competition card: rotating "moments" from THIS WEEK's video-upload board ($videoWeek, set by
-    video_data.php). Occupies the goal-row slot where the QR "GET THE APP" card sits. Reuses the .streak
-    card + .lb-list[data-rotate]/.lb-page cross-fade (slider_v1.js) — same as streak.php, no JS added.
-    Moments self-gate on data. Renders nothing when there are no video uploads this week. */
-$videoBoard = array_values(array_filter($videoWeek ?? [], fn($leader) => ($leader['count'] ?? 0) > 0));
-$videoLeader = $videoBoard[0] ?? null;
-if (!$videoLeader) return;
-$videoRunnerUp = $videoBoard[1] ?? null;
-$videoGap = $videoRunnerUp ? $videoLeader['count'] - $videoRunnerUp['count'] : null;
+/** Video competition card: rotating "moments" from the video-upload boards — THIS WEEK ($videoWeek) and
+    TODAY ($videoToday), set by video_data.php. Occupies the goal-row slot where the QR "GET THE APP" card
+    sits. Reuses the .streak card + .lb-list[data-rotate]/.lb-page cross-fade (slider_v1.js), like streak.php.
+    Moments self-gate on data. Renders nothing when there are no video uploads. */
 
-$moments = [];
-$moments[] = ['ico' => '&#127916;', 'label' => 'TOP UPLOADER', 'text' => escapeHtml($videoLeader['name']) . ' &mdash; ' . (int) $videoLeader['count'] . ' videos this week'];
-if ($videoRunnerUp && $videoGap <= 2) { // close race — make the rivalry visible
-    $moments[] = ['ico' => '&#9876;&#65039;', 'label' => 'NECK AND NECK (VIDEOS)', 'text' => escapeHtml($videoLeader['name']) . ' vs ' . escapeHtml($videoRunnerUp['name'])];
-}
-// Everyone tied at second place chases #1 (same gap for all).
-$videoSecondCount = null;
-foreach ($videoBoard as $person) {
-    if ($person['count'] < $videoLeader['count']) { $videoSecondCount = $person['count']; break; }
-}
-if ($videoSecondCount !== null) {
-    $videoBehind = $videoLeader['count'] - $videoSecondCount;
-    foreach ($videoBoard as $person) {
-        if ($person['count'] !== $videoSecondCount) continue;
-        $moments[] = ['ico' => '&#127937;', 'label' => 'CHASING THE LEAD (VIDEOS)', 'text' => escapeHtml($person['name']) . ' &mdash; ' . $videoBehind . ' to catch ' . escapeHtml($videoLeader['name'])];
+// Build the moments for one board (a period). Returns [] when the board is empty.
+$buildVideoMoments = function (array $rawBoard, string $periodText, string $periodTag): array {
+    $board = array_values(array_filter($rawBoard, fn($leader) => ($leader['count'] ?? 0) > 0));
+    $leader = $board[0] ?? null;
+    if (!$leader) return [];
+    $runnerUp = $board[1] ?? null;
+    $gap = $runnerUp ? $leader['count'] - $runnerUp['count'] : null;
+
+    $moments = [];
+    $moments[] = ['ico' => '&#127916;', 'label' => 'TOP UPLOADER &middot; ' . $periodTag, 'text' => escapeHtml($leader['name']) . ' &mdash; ' . (int) $leader['count'] . ' videos ' . $periodText];
+    if ($runnerUp && $gap <= 2) { // close race — make the rivalry visible
+        $moments[] = ['ico' => '&#9876;&#65039;', 'label' => 'NECK AND NECK &middot; ' . $periodTag, 'text' => escapeHtml($leader['name']) . ' vs ' . escapeHtml($runnerUp['name'])];
     }
-}
+    // Everyone tied at second place chases #1 (same gap for all).
+    $secondCount = null;
+    foreach ($board as $person) {
+        if ($person['count'] < $leader['count']) { $secondCount = $person['count']; break; }
+    }
+    if ($secondCount !== null) {
+        $behind = $leader['count'] - $secondCount;
+        foreach ($board as $person) {
+            if ($person['count'] !== $secondCount) continue;
+            $moments[] = ['ico' => '&#127937;', 'label' => 'CHASING THE LEAD &middot; ' . $periodTag, 'text' => escapeHtml($person['name']) . ' &mdash; ' . $behind . ' to catch ' . escapeHtml($leader['name'])];
+        }
+    }
+    return $moments;
+};
+
+$moments = array_merge(
+    $buildVideoMoments($videoWeek ?? [], 'this week', 'THIS WEEK'),
+    $buildVideoMoments($videoToday ?? [], 'today', 'TODAY')
+);
+if (!$moments) return;
 ?>
 <section class="card streak">
   <div class="lb-list"<?= count($moments) > 1 ? ' data-rotate="1"' : '' ?>>
