@@ -4,6 +4,8 @@ $user = requireLogin();
 // v1 has no activity slider — all data comes from the leaderboard API. Signature drives the 30s live poll
 // (refreshes on leaderboard changes + at midnight); stays non-empty so polling always runs and self-recovers.
 include __DIR__ . '/partials/video_data.php'; // sets $videoToday, $videoWeek (separate video endpoint)
+// Deploy version: bump version.txt (last upload step) to make every screen auto-reload for new CSS/JS/PHP.
+$version = trim(@file_get_contents(__DIR__ . '/version.txt')) ?: '0';
 $signature = md5(json_encode([
 	leaderboard('THIS_WEEK'),
 	leaderboard('TODAY'),
@@ -17,7 +19,7 @@ $signature = md5(json_encode([
 ]));
 if (isset($_GET['fragment'])) {
 	header('Content-Type: application/json');
-	echo json_encode(['signature' => $signature, 'html' => renderWallV1()]);
+	echo json_encode(['signature' => $signature, 'version' => $version, 'html' => renderWallV1()]);
 	exit;
 }
 ?>
@@ -39,7 +41,7 @@ if (isset($_GET['fragment'])) {
 	<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 </head>
 
-<body data-signature="<?= escapeHtml($signature) ?>">
+<body data-signature="<?= escapeHtml($signature) ?>" data-version="<?= escapeHtml($version) ?>">
 	<div id="wall"><?php include __DIR__ . '/wall_v1.php'; ?></div>
 	<script src="<?= asset('assets/slider_v1.js') ?>"></script>
 </body>

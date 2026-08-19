@@ -123,10 +123,13 @@ function initWall() {
 
 initWall();
 
-// Live updates: poll every 30s; swap the dashboard in place when the data changes. Runs forever (self-recovers).
+// Live updates: poll every 30s. Runs forever (self-recovers). URL is relative so it hits whichever
+// page served the wall (index.php / index_v1.php) — rename-proof.
 setInterval(async () => {
   try {
-    const { signature, html } = await (await fetch('index_v1.php?fragment=1', {cache: 'no-store'})).json();
+    const { signature, version, html } = await (await fetch('?fragment=1', {cache: 'no-store'})).json();
+    // A deploy bumped version.txt: full reload to pick up new CSS/JS/PHP, not just the #wall HTML.
+    if (version && version !== document.body.dataset.version) { location.reload(); return; }
     if (!signature || signature === document.body.dataset.signature) return;
     document.body.dataset.signature = signature;
     stopCelebration();
