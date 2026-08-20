@@ -13,7 +13,7 @@
 			<?php endif; ?>
 		</div>
 		<div class="stat">
-			<p class="stat-label">THIS WEEK</p>
+			<p class="stat-label">MEETINGS THIS WEEK</p>
 			<p class="stat-num pink"><?= $wall['week'] ?></p>
 			<?php if ($wall['weekRms']): ?>
 				<p class="stat-sub">BY <?= $wall['weekRms'] ?> RM<?= $wall['weekRms'] == 1 ? '' : 's' ?></p><?php endif; ?>
