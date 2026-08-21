@@ -43,10 +43,12 @@ $apiDown = !$weekAll && !$todayAll && !$brokerWeek && !$brokerToday && !$custome
 			<?php $cardTitle = 'VIDEOS UPLOADED';
 			$cardBadge = 'TODAY';
 			$cardLeaders = $videoToday;
+			$cardEmpty = 'No videos yet.';
 			include "$partialsDir/leaderboard_card.php"; ?>
 			<?php $cardTitle = 'VIDEOS UPLOADED';
 			$cardBadge = 'THIS WEEK';
 			$cardLeaders = $videoWeek;
+			$cardEmpty = 'No videos yet.';
 			include "$partialsDir/leaderboard_card.php"; ?>
 		<?php endif; ?>
 	</div>

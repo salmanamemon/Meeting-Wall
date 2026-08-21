@@ -11,7 +11,7 @@ $pages = array_chunk($tiers['leaders'], 3);
 			class="badge<?= $cardBadge === 'THIS WEEK' ? ' badge-week' : '' ?>"><?= escapeHtml($cardBadge) ?></span>
 	</div>
 	<?php if (!$pages): ?>
-		<div class="lb-empty">No meetings yet.</div>
+		<div class="lb-empty"><?= escapeHtml($cardEmpty ?? 'No meetings yet.') ?></div>
 	<?php else: ?>
 		<div class="lb-list" <?= count($pages) > 1 ? ' data-rotate="1"' : '' ?>>
 			<?php foreach ($pages as $pageIndex => $page): ?>
